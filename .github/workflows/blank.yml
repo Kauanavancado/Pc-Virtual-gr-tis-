@@ -1,0 +1,513 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlackOS - Meu PC Virtual</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: white;
+  overflow: hidden;
+  background: #080b18;
+}
+
+.desktop {
+  height: 100dvh;
+  padding: 18px;
+  padding-bottom: 65px;
+  background:
+    radial-gradient(ellipse at 75% 30%, #51228b 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 80%, #123d76 0%, transparent 45%),
+    linear-gradient(135deg, #080b18, #111a35);
+}
+
+.icon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 85px;
+}
+
+.desktop-icon {
+  width: 80px;
+  text-align: center;
+  cursor: pointer;
+  padding: 8px 3px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.desktop-icon:hover {
+  background: #ffffff22;
+}
+
+.desktop-icon span {
+  display: block;
+  font-size: 34px;
+  margin-bottom: 6px;
+}
+
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 55px;
+  background: #111525eF;
+  backdrop-filter: blur(15px);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 15px;
+  border-top: 1px solid #ffffff22;
+  z-index: 10000;
+}
+
+.start-button, .task-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 14px;
+  background: #ffffff15;
+  color: white;
+  cursor: pointer;
+}
+
+.start-button:hover, .task-button:hover {
+  background: #7652db;
+}
+
+.clock {
+  margin-left: auto;
+  text-align: right;
+  font-size: 12px;
+}
+
+.start-menu {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  bottom: 65px;
+  left: 12px;
+  width: min(320px, calc(100vw - 24px));
+  padding: 20px;
+  border-radius: 16px;
+  background: #171d32f5;
+  border: 1px solid #ffffff25;
+  box-shadow: 0 10px 50px #0008;
+}
+
+.start-menu h3 { margin-top: 0; }
+
+.start-app {
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  margin: 4px 0;
+  border-radius: 8px;
+  text-align: left;
+  background: #ffffff0c;
+  color: white;
+  cursor: pointer;
+}
+
+.start-app:hover { background: #7652db; }
+
+.window {
+  position: absolute;
+  top: 10%;
+  left: 20%;
+  width: min(560px, 90vw);
+  height: min(420px, 70vh);
+  background: #151a2b;
+  border: 1px solid #a78bfa88;
+  border-radius: 12px;
+  box-shadow: 0 15px 60px #0009;
+  overflow: hidden;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.titlebar {
+  height: 42px;
+  flex-shrink: 0;
+  background: #242b42;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: move;
+  user-select: none;
+}
+
+.window-title { flex: 1; font-size: 13px; }
+
+.close {
+  border: 0;
+  background: #e34d65;
+  color: white;
+  width: 27px;
+  height: 27px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.window-body {
+  padding: 16px;
+  overflow: auto;
+  flex: 1;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 11px;
+  border-radius: 7px;
+  border: 1px solid #414a68;
+  background: #0d1222;
+  color: white;
+  margin-bottom: 10px;
+}
+
+textarea {
+  height: 220px;
+  resize: none;
+}
+
+.action {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 14px;
+  background: #7955df;
+  color: white;
+  cursor: pointer;
+  margin: 3px;
+}
+
+.file {
+  display: inline-block;
+  padding: 15px;
+  margin: 5px;
+  background: #ffffff0c;
+  border-radius: 8px;
+}
+
+.calculator-display {
+  font-size: 26px;
+  text-align: right;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.calc-grid button {
+  padding: 13px 3px;
+  border: 0;
+  border-radius: 7px;
+  background: #303954;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.calc-grid button:hover { background: #7955df; }
+
+.browser-page {
+  padding: 16px;
+  background: #f4f4f8;
+  color: #202337;
+  border-radius: 8px;
+  min-height: 180px;
+}
+
+@media (max-width: 600px) {
+  .window { left: 5%; width: 90%; top: 12%; }
+  .taskbar { gap: 7px; padding: 0 8px; }
+  .task-button { padding: 9px; }
+}
+</style>
+</head>
+
+<body>
+<div class="desktop" id="desktop">
+  <div class="icon-list">
+    <div class="desktop-icon" onclick="openApp('explorer')">
+      <span>📁</span>Arquivos
+    </div>
+    <div class="desktop-icon" onclick="openApp('notes')">
+      <span>📝</span>Bloco de notas
+    </div>
+    <div class="desktop-icon" onclick="openApp('calculator')">
+      <span>🧮</span>Calculadora
+    </div>
+    <div class="desktop-icon" onclick="openApp('browser')">
+      <span>🌐</span>Navegador
+    </div>
+    <div class="desktop-icon" onclick="openApp('about')">
+      <span>⚙️</span>Sistema
+    </div>
+  </div>
+</div>
+
+<div class="start-menu" id="startMenu">
+  <h3>🖥️ BlackOS</h3>
+  <p>Seus aplicativos</p>
+  <button class="start-app" onclick="openApp('explorer')">📁 Explorador de arquivos</button>
+  <button class="start-app" onclick="openApp('notes')">📝 Bloco de notas</button>
+  <button class="start-app" onclick="openApp('calculator')">🧮 Calculadora</button>
+  <button class="start-app" onclick="openApp('browser')">🌐 Navegador</button>
+  <button class="start-app" onclick="openApp('about')">⚙️ Configurações</button>
+</div>
+
+<div class="taskbar">
+  <button class="start-button" onclick="toggleStart()">⊞ Iniciar</button>
+  <button class="task-button" onclick="openApp('explorer')">📁</button>
+  <button class="task-button" onclick="openApp('notes')">📝</button>
+  <button class="task-button" onclick="openApp('calculator')">🧮</button>
+  <div class="clock">
+    <div id="time"></div>
+    <div id="date"></div>
+  </div>
+</div>
+
+<script>
+let topZ = 20;
+let calcExpression = "";
+let savedNotes = localStorage.getItem("blackos-notes") || "";
+
+function toggleStart() {
+  const menu = document.getElementById("startMenu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+function openApp(app) {
+  document.getElementById("startMenu").style.display = "none";
+
+  const old = document.getElementById("win-" + app);
+  if (old) {
+    old.style.display = "flex";
+    old.style.zIndex = ++topZ;
+    return;
+  }
+
+  const titles = {
+    explorer: "📁 Explorador de arquivos",
+    notes: "📝 Bloco de notas",
+    calculator: "🧮 Calculadora",
+    browser: "🌐 Navegador",
+    about: "⚙️ Sobre o BlackOS"
+  };
+
+  let content = "";
+
+  if (app === "explorer") {
+    content = `
+      <h3>Meus arquivos</h3>
+      <div class="file">📁 Documentos</div>
+      <div class="file">📁 Imagens</div>
+      <div class="file">📁 Jogos</div>
+      <div class="file">📄 Leia-me.txt</div>
+      <p>Este é um explorador demonstrativo. Ele ainda não acessa os arquivos reais do dispositivo.</p>`;
+  }
+
+  if (app === "notes") {
+    content = `
+      <p>Escreva suas ideias aqui. As notas ficam salvas neste navegador.</p>
+      <textarea id="noteArea" placeholder="Digite suas anotações..."></textarea>
+      <button class="action" onclick="saveNotes()">💾 Salvar notas</button>
+      <span id="noteStatus"></span>`;
+  }
+
+  if (app === "calculator") {
+    content = `
+      <div class="calculator-display" id="calcDisplay">0</div>
+      <div class="calc-grid">
+        ${["7","8","9","÷","4","5","6","×","1","2","3","-","C","0","=","+"].map(k =>
+          `<button onclick="calcPress('${k}')">${k}</button>`
+        ).join("")}
+      </div>`;
+  }
+
+  if (app === "browser") {
+    content = `
+      <p>Digite um endereço de site:</p>
+      <input id="siteAddress" placeholder="https://example.com">
+      <button class="action" onclick="visitSite()">Abrir site</button>
+      <div id="browserResult" class="browser-page">
+        <h3>🌐 Navegador Black</h3>
+        <p>Seu navegador virtual está pronto.</p>
+      </div>`;
+  }
+
+  if (app === "about") {
+    content = `
+      <h2>💻 BlackOS</h2>
+      <p>Versão 1.0</p>
+      <p>Um computador virtual criado com HTML, CSS e JavaScript.</p>
+      <p>Estado: funcionando</p>
+      <button class="action" onclick="changeWallpaper()">🎨 Mudar papel de parede</button>`;
+  }
+
+  const win = document.createElement("div");
+  win.className = "window";
+  win.id = "win-" + app;
+  win.style.zIndex = ++topZ;
+  win.innerHTML = `
+    <div class="titlebar">
+      <span class="window-title">${titles[app]}</span>
+      <button class="close" onclick="this.closest('.window').remove()">✕</button>
+    </div>
+    <div class="window-body">${content}</div>`;
+
+  document.getElementById("desktop").appendChild(win);
+
+  win.addEventListener("pointerdown", () => {
+    win.style.zIndex = ++topZ;
+  });
+
+  makeDraggable(win);
+
+  if (app === "notes") {
+    document.getElementById("noteArea").value = savedNotes;
+  }
+}
+
+function makeDraggable(win) {
+  const bar = win.querySelector(".titlebar");
+  let startX, startY, startLeft, startTop, dragging = false;
+
+  bar.addEventListener("pointerdown", e => {
+    if (e.target.closest("button")) return;
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = win.offsetLeft;
+    startTop = win.offsetTop;
+    bar.setPointerCapture(e.pointerId);
+  });
+
+  bar.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    win.style.left = Math.max(0, Math.min(
+      window.innerWidth - 80,
+      startLeft + e.clientX - startX
+    )) + "px";
+    win.style.top = Math.max(0, Math.min(
+      window.innerHeight - 100,
+      startTop + e.clientY - startY
+    )) + "px";
+  });
+
+  bar.addEventListener("pointerup", () => dragging = false);
+  bar.addEventListener("pointercancel", () => dragging = false);
+}
+
+function saveNotes() {
+  savedNotes = document.getElementById("noteArea").value;
+  localStorage.setItem("blackos-notes", savedNotes);
+  document.getElementById("noteStatus").textContent = " ✅ Salvo!";
+}
+
+function calcPress(key) {
+  const display = document.getElementById("calcDisplay");
+
+  if (key === "C") {
+    calcExpression = "";
+    display.textContent = "0";
+    return;
+  }
+
+  if (key === "=") {
+    try {
+      if (!/^[0-9+\-×÷().\s]+$/.test(calcExpression)) {
+        throw new Error("Expressão inválida");
+      }
+
+      const expression = calcExpression
+        .replace(/×/g, "*")
+        .replace(/÷/g, "/");
+
+      if (!expression.trim()) return;
+
+      const result = Function('"use strict"; return (' + expression + ')')();
+
+      if (!Number.isFinite(result)) throw new Error("Resultado inválido");
+
+      calcExpression = String(result);
+      display.textContent = calcExpression;
+    } catch {
+      display.textContent = "Erro";
+      calcExpression = "";
+    }
+    return;
+  }
+
+  calcExpression += key;
+  display.textContent = calcExpression;
+}
+
+function visitSite() {
+  const input = document.getElementById("siteAddress");
+  const result = document.getElementById("browserResult");
+  let address = input.value.trim();
+
+  if (!address) {
+    result.textContent = "Digite um endereço primeiro.";
+    return;
+  }
+
+  if (!/^https?:\/\//i.test(address)) {
+    address = "https://" + address;
+  }
+
+  try {
+    const url = new URL(address);
+    if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+
+    result.innerHTML = `
+      <h3>🌐 ${url.hostname}</h3>
+      <p>O site será aberto em uma nova aba.</p>
+      <button class="action" id="openExternal">Continuar</button>`;
+
+    document.getElementById("openExternal").onclick = () => {
+      window.open(url.href, "_blank", "noopener,noreferrer");
+    };
+  } catch {
+    result.textContent = "Endereço inválido.";
+  }
+}
+
+let wallpaperIndex = 0;
+const wallpapers = [
+  "radial-gradient(ellipse at 75% 30%, #51228b 0%, transparent 40%), radial-gradient(ellipse at 20% 80%, #123d76 0%, transparent 45%), linear-gradient(135deg, #080b18, #111a35)",
+  "radial-gradient(circle at 70% 30%, #087e8b, transparent 40%), linear-gradient(135deg, #031927, #10152f)",
+  "radial-gradient(circle at 40% 40%, #a52a45, transparent 45%), linear-gradient(135deg, #170b22, #080b18)"
+];
+
+function changeWallpaper() {
+  wallpaperIndex = (wallpaperIndex + 1) % wallpapers.length;
+  document.getElementById("desktop").style.background =
+    wallpapers[wallpaperIndex];
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById("time").textContent =
+    now.toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"});
+  document.getElementById("date").textContent =
+    now.toLocaleDateString("pt-BR");
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
